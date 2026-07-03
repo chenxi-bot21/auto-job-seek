@@ -43,6 +43,16 @@ class CandidateProfile:
         "quantitative research", "data analytics", "biostatistics", "real-world evidence",
         "statistics", "market risk",
     ])
+    # Scarce, high-value roles to push the candidate TOWARD: quantitative /
+    # modelling / model-validation / risk-data-science work. Local talent is thin
+    # here, so employers are likelier to sponsor a strong new grad — the opposite
+    # of generic analyst/KYC roles (see ScreeningRules.deprioritize_title_keywords).
+    # Matched against the job TITLE; a hit adds a score boost.
+    priority_title_keywords: list[str] = field(default_factory=lambda: [
+        "model validation", "model risk", "credit risk model", "risk model",
+        "modelling", "modeling", "scorecard", "quant", "quantitative",
+        "data scientist", "data science", "ifrs 9", "market risk", "risk analytics",
+    ])
     # Skill taxonomy the candidate possesses (lower-case, matched as substrings).
     skills: list[str] = field(default_factory=lambda: [
         "python", "r", "sql", "vba", "sas", "stata", "tableau", "excel",
@@ -90,6 +100,17 @@ class ScreeningRules:
     senior_tokens: list[str] = field(default_factory=lambda: [
         "senior", "lead ", "principal", "staff ", "head of", "director",
         "vice president", "manager,", "10+ years", "8+ years", "7+ years",
+    ])
+    # Generic / abundant-local-talent titles to push DOWN (a penalty, not a
+    # knock-out — still a fallback). A foreign new grad is rarely sponsored over
+    # a local candidate for these, so they should rank below the scarce, modelling
+    # roles in CandidateProfile.priority_title_keywords. Matched against the TITLE.
+    # (A title that hits both a priority and a deprioritise term — e.g. "AML Data
+    # Scientist" — nets roughly neutral, which is the intended behaviour.)
+    deprioritize_title_keywords: list[str] = field(default_factory=lambda: [
+        "kyc", "kyb", "aml", "anti-money", "know your customer", "compliance",
+        "accounts receivable", "credit control", "collections", "underwriter",
+        "underwriting", "audit", "business analyst", "administrator", "clerk",
     ])
 
 

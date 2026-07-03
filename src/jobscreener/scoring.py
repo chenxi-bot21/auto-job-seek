@@ -10,6 +10,12 @@ recommendation is explainable (unlike a single opaque number):
   * **seniority_alignment** (10%) — early-career suitability
   * **location_preference** (10%) — preferred locations rank higher
 
+On top of the blend, a **focus adjustment** nudges the ranking toward the scarce,
+sponsor-worthy roles (modelling / model-validation / quant / risk-data-science)
+and away from generic, abundant-local-talent roles (KYC / AML-analyst / AR /
+underwriting / compliance) — see ``priority_title_keywords`` /
+``deprioritize_title_keywords`` in :mod:`jobscreener.config`.
+
 This content-based scorer needs no API key. When one is configured, the LLM
 re-scores the shortlist for nuance (see :mod:`jobscreener.llm`).
 """
@@ -24,6 +30,10 @@ from .cv import CVProfile, skill_present
 from .models import JobPosting, ScoreBreakdown, ScoredJob
 
 _SENIORITY_SCORE = {"entry": 100.0, "internship": 90.0, "mid": 60.0, "senior": 0.0}
+
+# Focus adjustment applied to the final score (points, before clamping to 0-100).
+_PRIORITY_BOOST = 12.0        # per the strategy: chase scarce, sponsor-worthy roles
+_DEPRIORITIZE_PENALTY = 12.0  # push generic analyst/KYC/AR roles down the list
 
 
 def _best_title_ratio(title: str, roles: list[str]) -> float:
@@ -79,10 +89,28 @@ class HeuristicScorer:
         overall = (w.skill_match * skill + w.title_relevance * title + w.domain_fit * domain
                    + w.seniority_alignment * seniority + w.location_preference * location)
 
+        # --- focus adjustment: toward scarce/modelling roles, away from generic ---
+        adj, focus_reasons = self._focus_adjust(job.title)
+        overall = max(0.0, min(100.0, overall + adj))
+
+        reasons = self._reasons(job, matched, title, location) + focus_reasons
         return ScoredJob(
             job=job, score=round(overall, 1), breakdown=breakdown,
-            matched_skills=matched, reasons=self._reasons(job, matched, title, location),
+            matched_skills=matched, reasons=reasons,
         )
+
+    def _focus_adjust(self, title: str) -> tuple[float, list[str]]:
+        """Boost scarce/modelling titles, penalise generic ones (both can apply)."""
+        t = title.lower()
+        p, r = self.settings.profile, self.settings.rules
+        adj, reasons = 0.0, []
+        if any(k in t for k in p.priority_title_keywords):
+            adj += _PRIORITY_BOOST
+            reasons.append("Priority: scarce modelling/quant role (harder to fill → sponsor-worthy)")
+        if any(k in t for k in r.deprioritize_title_keywords):
+            adj -= _DEPRIORITIZE_PENALTY
+            reasons.append("De-prioritised: generic role with abundant local candidates")
+        return adj, reasons
 
     def _reasons(self, job, matched, title_score, location_score) -> list[str]:
         reasons = []

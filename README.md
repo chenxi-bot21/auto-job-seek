@@ -3,7 +3,7 @@
 <p>
   <a href="https://github.com/chenxi-bot21/daily-job-matcher/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/chenxi-bot21/daily-job-matcher/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-37%20passing-2E4057">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-43%20passing-2E4057">
   <img alt="Claude" src="https://img.shields.io/badge/LLM-Claude%20(optional)-D97757">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
@@ -193,7 +193,7 @@ job_screener/
 │   ├── email_out.py   · optional SMTP delivery
 │   └── pipeline.py    · orchestration
 ├── data/sample_jobs.json
-├── tests/             · 37 unit tests
+├── tests/             · 43 unit tests
 └── output/            · generated HTML reports
 ```
 
