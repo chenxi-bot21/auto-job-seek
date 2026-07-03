@@ -1,22 +1,29 @@
 # jobscreener — Daily AI Job-Screening Pipeline
 
 <p>
+  <a href="https://github.com/chenxi-bot21/daily-job-matcher/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/chenxi-bot21/daily-job-matcher/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-37%20passing-2E4057">
   <img alt="Claude" src="https://img.shields.io/badge/LLM-Claude%20(optional)-D97757">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-12%20passing-2E4057">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
-A Python port of an n8n "morning job digest" workflow: every day it reads your
-CV, pulls fresh job postings, **normalises → de-duplicates → filters → scores**
-each one against your CV, ranks them, takes the **top 15**, and emails you a
-clean HTML digest.
+An end-to-end job-search assistant that runs the **whole loop**: pull fresh job
+postings, **screen** them against your CV with a hard ATS-style *knockout gate*
+(work authorization / years of experience / degree) + a transparent fit score,
+**curate** the real matches, **track** them in a single Notion tracker, and
+**report** what to apply to first.
+
+Two layers: the mechanical steps are a tested Python package (`jobscreener`); the
+judgement steps run as a **[Claude Agent Skill](SKILL.md)** (`daily-job-matcher`)
+that reads full JDs, curates true fit, writes to Notion, and updates each
+application's status from Gmail.
 
 Runs **fully offline with no API key** (bundled sample postings + a transparent
-heuristic scorer); transparently upgrades to LLM scoring and a live job source
-when configured.
+heuristic scorer); transparently upgrades to LLM scoring, a live job source, and
+Notion/Gmail sync when configured.
 
-➡️ **How the screening actually works: [METHODOLOGY.md](METHODOLOGY.md).**
+➡️ **The daily cycle: [SKILL.md](SKILL.md) · How the screening decides: [METHODOLOGY.md](METHODOLOGY.md).**
 
 ## Workflow → code (mirrors the architecture diagram)
 
@@ -25,12 +32,12 @@ when configured.
 | Schedule Trigger (7:30 daily) | OS scheduler → `python -m jobscreener run` |
 | Config | `config.py` (profile, rules, weights, paths) |
 | RetrieveCV · Extract from File · MapResume | `cv.py` (read .md/.docx/.pdf → skill profile) |
-| LinkedIn (job source) | `sources.py` (sample file / Remotive; pluggable) |
+| LinkedIn (job source) | `sources.py` (Apify actor / JobSpy / Remotive / sample; pluggable) |
 | NormalizeData | `normalize.py` |
 | Filter and deduplicate | `dedup.py` + `filters.py` (ATS-style knockout gate) + `history.py` (cross-run de-dup) |
 | Prepare AI Input · Score the job · Parse LLM JSON | `scoring.py` + `llm.py` |
 | Merge Scores + Meta · Rank · Top 15 | `pipeline.py` |
-| Build Email HTML | `report.py` |
+| Write to tracker | `notion.py` (Notion) · `report.py` (HTML digest) |
 | Send a message (Gmail) | `email_out.py` (optional, SMTP) |
 
 ## Quickstart
@@ -180,11 +187,13 @@ job_screener/
 │   ├── filters.py     · hard filters (freshness/location/seniority/keywords)
 │   ├── scoring.py     · heuristic 0-100 fit score (5 dimensions)
 │   ├── llm.py         · optional Claude shortlist re-scoring
+│   ├── history.py    · cross-run de-dup (skip jobs seen on earlier days)
+│   ├── notion.py     · push the shortlist to a Notion database
 │   ├── report.py      · HTML email digest
 │   ├── email_out.py   · optional SMTP delivery
 │   └── pipeline.py    · orchestration
 ├── data/sample_jobs.json
-├── tests/             · 12 unit tests
+├── tests/             · 37 unit tests
 └── output/            · generated HTML reports
 ```
 
