@@ -98,5 +98,7 @@ matching rows' **Status** in the same master table (`Applied` / `Rejected` /
 ## Notes
 - No in-house LinkedIn scraper (ToS). Sources are pluggable behind `JobSource`
   in `sources.py`: Apify (managed, recommended), JobSpy (free), sample/CSV/JSON.
-- The Notion/Gmail MCP connectors only work inside an interactive session, so
-  the cycle is on-command, not a background cron.
+- The Notion/Gmail MCP connectors are verified to work in headless scheduled
+  runs (2026-07-03); the cycle runs as the nightly `daily-job-feedback-sync`
+  scheduled task AND on command. If a headless run can't reach a connector,
+  report-and-stop rather than fail silently.
