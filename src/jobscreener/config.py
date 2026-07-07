@@ -52,6 +52,11 @@ class CandidateProfile:
         "model validation", "model risk", "credit risk model", "risk model",
         "modelling", "modeling", "scorecard", "quant", "quantitative",
         "data scientist", "data science", "ifrs 9", "market risk", "risk analytics",
+        # + fresh-grad / campus signals (added 2026-07-04): she's a fresh grad, so
+        # rank explicit graduate / trainee / early-careers roles ABOVE the generic
+        # "1-3 years" analyst postings that only just clear the experience gate.
+        "graduate", "trainee", "management associate", "analyst programme",
+        "early careers", "campus hire", "fresh grad",
     ])
     # Skill taxonomy the candidate possesses (lower-case, matched as substrings).
     skills: list[str] = field(default_factory=lambda: [
