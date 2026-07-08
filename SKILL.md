@@ -67,6 +67,11 @@ Run from the project directory. (If `python` is a broken Windows Store stub, use
    create a new table each day. Columns: Name, Company, Location, Fit
    (Strong/Good/Moderate), Notes (why / caveats), Seniority, Status (new matches
    = `To Apply`), URL, Date, Source (`LinkedIn`). Prefix Name with a priority number.
+   **UPSERT rule — never insert before searching.** Query the tracker for BOTH a
+   distinctive company token AND a title fragment; use the *shortest distinctive*
+   token so name variants still match ("Agricole" not "Crédit Agricole CIB HK" —
+   accents, suffixes, and HK/SG tags have all defeated exact matching before).
+   If any plausible match exists, UPDATE that row (or skip) — do not add a second.
 5. **Report** the ranked shortlist and which to apply to first.
 
 Use `--exclude-seen` so the same job isn't surfaced on consecutive days.
@@ -88,6 +93,11 @@ job-application confirmations, rejections, and interview invites, then update th
 matching rows' **Status** in the same master table (`Applied` / `Rejected` /
 `Interview` / `Offer` / `Started`), or add rows for applications not yet tracked
 (Source = `Email`). One table for both matching and tracking.
+**Backfills follow the same UPSERT rule as step 4:** before adding a row from an
+email, search the tracker by a short company token + title fragment — the daily
+cycle may already have added the same role under a slightly different company
+name (this produced real duplicates on 2026-07-08: CACIB, Milliman). Match found
+→ update its Status/Notes; only add when nothing plausibly matches.
 
 ## References (read as needed)
 - `RUNBOOK.md` — full operating manual, gotchas, module map, how to extend.
